@@ -1,15 +1,10 @@
-setwd("/Users/dominik/R_quant/rates quant_MBS modelling/Veronesi")
-# 1. compute coupon payment C ---------------------------------------------
 
-#Consider a 5-year mortgage with $100,000 principal with semi-annual payments.
-#Let the semiannually compounded mortgage rate r2m = 7.564%
+#GOAL. Building a model forecasting the short-term rate (6-months rate)
+#MOTIVATION. The resulting interest rate tree can be used to price all sorts of rates derivatives
 
-#deduce coupon payments C, given semi-annual payments, USD 100k principal, and a mortgage rate of 7.564%
-#note. face value FV is 0 because the principal of mortgages are paid back as part of the coupon payments C (this is different from bonds, where the principal is repaid at the end)
-library(FinCal)
-#C = pmt(pv=100000,r=0.07564/2,n=5*2, fv=0)
+setwd("/Users/dominik/R_quant/rates quant_MBS modelling/veronesi/ratesQuant")
 
-# 2. calibrate interest rate tree -----------------------------------------
+#1. calibrate interest rate tree -----------------------------------------
 #interest rate tree nails (zero) bond pricing tree, and vice versa
 
 # 2.1 Write function which returns a bond price (or, alternatively returns, the underlying price tree)
@@ -33,9 +28,10 @@ obtain_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size
   return(price_tree[1,1])
 }
 
-# 2.2 solver. find drift term that aligns price tree with observed --------
 #load yield curve data
 source("yieldcurve.R")
+
+# 2.2 solver. find drift term which calibrates interest rate tree in a way that matches (zero bond) pricing tree
 #initialize interest rate tree and a vector holding the drift term theta
 int_treeM <- matrix(NA,nrow=20,ncol=20)
 thetaFinal <- c()
@@ -47,7 +43,7 @@ int_treeM[1,1] <- -1/0.5*log(ZeroT1/100)
 #idea. to build our interest rate tree we search for a drift terms theta_i which match the term structure
 #since we take the first short-term rate r_0.5(0,0.5) as given, we start our for loop at 2
 for (Zi in 2:20) {
-  #to keep deviations between our model and the observed term structure low, we choose a low target error. The choice is discretionary, but I believe 10^(-21) should do the trick
+  #to keep deviations between our model and the observed term structure low, we choose a low target error. The choice is discretionary, but I believe 10^(-10) should do the trick
   tgt_err = 10^(-10)
   error = 0.2
   #choose lower and upper bound for the drift term
@@ -80,5 +76,8 @@ for (Zi in 2:20) {
   thetaFinal[Zi-1] <- thetaMean
 }
 
+#to print our final output--i.e., our drift terms theta_i
+print(thetaFinal)
 
-
+#to view our interest rate tree
+View(int_treeM)

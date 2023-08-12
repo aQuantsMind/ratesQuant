@@ -1,3 +1,9 @@
+#BACKGROUND. We can build pricing models using our interest rate tree model (we built in "rates_model.R")
+#GOAL. we're interest in the optimal mortgage rate, which a bank charges to homeowners.
+#APPROACH. When setting the mortgage rate, we account not only for the current interest rate environment, but also take into account our view about how the short rate will evolve over time (subsumed by an interest rate tree)
+
+#to find coupon, given mortgage interest rate and other inputs
+#alternatively, use pmt() from the FinCal library 
 FindCoupon <- function(r_m,numb_payments_per_year=2,maturity_T=10,present_value=100000){
   Sum = 0
   Periods_N = numb_payments_per_year*maturity_T
@@ -9,7 +15,15 @@ FindCoupon <- function(r_m,numb_payments_per_year=2,maturity_T=10,present_value=
   return(coupon)
 }
 
-obtain_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size = 0.5, tree=F){
+#find bond price, given an interest rate tree (see "rates model.R" and a bond's coupon and par)
+#to return the bond price only, set tree=False
+#to return the whole price tree, set tree=True
+
+#####as a side note,...
+#since R is indexed at 1, prices are written in the column 1 (and row 1) in the price tree, and not at column/row 0. However, this also means that the repayment of the face value, together with the last coupon payment, occurs in column/node ((number_payments_per_year)*T)+1, where T is the maturity date 
+#(contd.) For example, if we have a 10-year bond with semi-annual coupon payments, the last payment occurs in node (number_of_payments_per_year)*T+1 = 2*10+1 = 21
+#(contd.) Instead of having 21 nodes in our price trees, however, we just discount the 21th period back into our node 20, instead of writing the actual payments that occur in node 21 explicitly
+find_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size = 0.5, tree=F){
   price_tree <- matrix(NA,nrow=num_period,ncol=num_period)
   for (j in num_period:1){
     for (i in j:1){
@@ -27,7 +41,10 @@ obtain_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size
   return(price_tree[1,1])
 }
 
-obtain_mortgage_price_F <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
+#to find mortgage price, start with the price of a mortgage without prepayment option (using "mortgage_tree" as an input)
+#Then, compute the value of the prepayment option through backward-induction
+#In each node t, compute the value of exercising your option by comparing the debt_t homebuyers owe (mortgage value in node t) with the outstanding principal
+find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
   american_tree <- matrix(nrow=num_periods, ncol=num_periods)
   exercise_tree <- matrix(0, nrow = num_periods, ncol = num_periods)
   for (j in num_periods:1){
@@ -58,6 +75,8 @@ obtain_mortgage_price_F <- function(mortgage_tree,coupon,principal_schedule, int
   return(mortgage_tree[1,1] - american_tree[1,1])
 }
 
+#Write a function which computes the outstanding principal in each node.
+#motivation. In each node, we want to compare the outstanding principal with the market value of debt (in other words, the mortgage value without prepayment option) which homebuyers owe.
 PrincipalScheduleFunc <- function(coupon, L_0 = 100000,r=r,step_size=0.5,num_period=num_periods){
   I_paid=c()
   Principal_paid = c()
@@ -83,6 +102,7 @@ PrincipalScheduleFunc <- function(coupon, L_0 = 100000,r=r,step_size=0.5,num_per
   return(L_t)
 }
 
+
 source("find_mortgage_rate_Example 12.7.R")
 
 target_mortgage_value = 100000
@@ -92,8 +112,8 @@ step_size=0.5
 diff_function <- function(r) {
   current_coupon <- FindCoupon(r_m = r)
   L_t <- PrincipalScheduleFunc(coupon=current_coupon,L_0 = 100000,r=r,step_size = 0.5,num_period = num_periods)
-  mortgage_tree = obtain_bond_price(int_tree=int_treeM, num_period = num_periods,coupon=current_coupon,par=0,tree=T)
-  current_mortgage_value <- obtain_mortgage_price_F(mortgage_tree=mortgage_tree,coupon = current_coupon,principal_schedule=L_t,int_tree = int_treeM,tree = F)
+  mortgage_tree = find_bond_price(int_tree=int_treeM, num_period = num_periods,coupon=current_coupon,par=0,tree=T)
+  current_mortgage_value <- find_mortgage_price(mortgage_tree=mortgage_tree,coupon = current_coupon,principal_schedule=L_t,int_tree = int_treeM,tree = F)
   return(current_mortgage_value - target_mortgage_value)
 }
 
@@ -101,10 +121,10 @@ result <- uniroot(diff_function, interval = c(0.001, 0.2))  # You can adjust the
 
 # Check if uniroot was successful
 if (result$root == result$root) {
-  print(paste("The mortgage rate (r) that gives a mortgage value of $100,000 is:", result$root))
+  print(paste("The mortgage rate (r) for our semi-annually compounded 10-year mortgage with a face value of $100,000 is:", result$root))
 } else {
   print("Uniroot was not successful. Try adjusting the interval or using a different method.")
 }
 
-mortgage_tree[1,1]
+
 
