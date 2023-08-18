@@ -23,11 +23,11 @@ FindCoupon <- function(r_m,numb_payments_per_year=2,maturity_T=10,present_value=
 #since R is indexed at 1, prices are written in the column 1 (and row 1) in the price tree, and not at column/row 0. However, this also means that the repayment of the face value, together with the last coupon payment, occurs in column/node ((number_payments_per_year)*T)+1, where T is the maturity date 
 #(contd.) For example, if we have a 10-year bond with semi-annual coupon payments, the last payment occurs in node (number_of_payments_per_year)*T+1 = 2*10+1 = 21
 #(contd.) Instead of having 21 nodes in our price trees, however, we just discount the 21th period back into our node 20, instead of writing the actual payments that occur in node 21 explicitly
-find_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size = 0.5, tree=F){
-  price_tree <- matrix(NA,nrow=num_period,ncol=num_period)
-  for (j in num_period:1){
+find_bond_price <- function(int_tree, maturity_T, coupon=0, par=100, step_size = 0.5, tree=F){
+  price_tree <- matrix(NA,nrow=maturity_T,ncol=maturity_T)
+  for (j in maturity_T:1){
     for (i in j:1){
-      if(j == (num_period)){
+      if(j == (maturity_T)){
         price_tree[i,j] = exp(-1*step_size*int_tree[i,j])*(par+coupon)
       }
       else{
@@ -45,11 +45,11 @@ find_bond_price <- function(int_tree, num_period, coupon=0, par=100, step_size =
 #Then, compute the value of the prepayment option through backward-induction
 #In each node t, compute the value of exercising your option by comparing the debt_t homebuyers owe (mortgage value in node t) with the outstanding principal
 find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
-  american_tree <- matrix(nrow=num_periods, ncol=num_periods)
-  exercise_tree <- matrix(0, nrow = num_periods, ncol = num_periods)
-  for (j in num_periods:1){
+  american_tree <- matrix(nrow=maturity_T, ncol=maturity_T)
+  exercise_tree <- matrix(0, nrow = maturity_T, ncol = maturity_T)
+  for (j in (maturity_T):1){
     for (i in j:1){
-      if(j != num_periods){
+      if(j != (maturity_T)){
         if(j!= 1){
           wait = exp(-1*step_size*int_tree[i,j])*((.5*(american_tree[i,j+1]+american_tree[i+1,j+1])))
           exercise = max(mortgage_tree[i,j] - principal_schedule[j],0)
@@ -63,9 +63,8 @@ find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tre
         }
       }
       else{
-        wait = 0
-        exercise = max(mortgage_tree[i,j] - principal_schedule[j],0)
-        american_tree[i,j] = max(wait,exercise)
+        #by definition, wait and exercise value are 0 in the lats period. hence, option's value is 0
+        american_tree[i,j] = 0
         }
       }
     }
@@ -77,12 +76,13 @@ find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tre
 
 #Write a function which computes the outstanding principal in each node.
 #motivation. In each node, we want to compare the outstanding principal with the market value of debt (in other words, the mortgage value without prepayment option) which homebuyers owe.
-PrincipalScheduleFunc <- function(coupon, L_0 = 100000,r=r,step_size=0.5,num_period=num_periods){
+PrincipalScheduleFunc <- function(coupon, L_0 = 100000,r=r,step_size=0.5,maturity_T=maturity_T){
   I_paid=c()
   Principal_paid = c()
   L_t = c()
-  for (t in 1:num_period){
+  for (t in 1:maturity_T){
     if (t==1){
+      #initialize the principal schedule in node
       I_paid[t] = 0
       Principal_paid[t] = 0
       L_t[t] = L_0
@@ -106,13 +106,13 @@ PrincipalScheduleFunc <- function(coupon, L_0 = 100000,r=r,step_size=0.5,num_per
 source("find_mortgage_rate_Example 12.7.R")
 
 target_mortgage_value = 100000
-num_periods = 20
+maturity_T = 20
 step_size=0.5
 
 diff_function <- function(r) {
   current_coupon <- FindCoupon(r_m = r)
-  L_t <- PrincipalScheduleFunc(coupon=current_coupon,L_0 = 100000,r=r,step_size = 0.5,num_period = num_periods)
-  mortgage_tree = find_bond_price(int_tree=int_treeM, num_period = num_periods,coupon=current_coupon,par=0,tree=T)
+  L_t <- PrincipalScheduleFunc(coupon=current_coupon,L_0 = 100000,r=0.1,step_size = 0.5,maturity_T = maturity_T)
+  mortgage_tree = find_bond_price(int_tree=int_treeM, maturity_T, coupon=current_coupon,par=0,tree=T)
   current_mortgage_value <- find_mortgage_price(mortgage_tree=mortgage_tree,coupon = current_coupon,principal_schedule=L_t,int_tree = int_treeM,tree = F)
   return(current_mortgage_value - target_mortgage_value)
 }
