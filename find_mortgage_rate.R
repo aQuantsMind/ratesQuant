@@ -45,8 +45,8 @@ find_bond_price <- function(int_tree, maturity_T, coupon=0, par=100, step_size =
 #Then, compute the value of the prepayment option through backward-induction
 #In each node t, compute the value of exercising your option by comparing the debt_t homebuyers owe (mortgage value in node t) with the outstanding principal
 find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
-  american_tree <- matrix(nrow=maturity_T, ncol=maturity_T)
-  exercise_tree <- matrix(0, nrow = maturity_T, ncol = maturity_T)
+  american_tree <- matrix(nrow=nodes_N, ncol=nodes_N)
+  exercise_tree <- matrix(0, nrow = nodes_N, ncol = nodes_N)
   for (j in (maturity_T):1){
     for (i in j:1){
       if(j != (maturity_T)){
@@ -111,7 +111,7 @@ step_size=0.5
 
 diff_function <- function(r) {
   current_coupon <- FindCoupon(r_m = r)
-  L_t <- PrincipalScheduleFunc(coupon=current_coupon,L_0 = 100000,r=0.1,step_size = 0.5,maturity_T = maturity_T)
+  L_t <- PrincipalScheduleFunc(coupon=current_coupon,L_0 = 100000,r=r,step_size = 0.5,maturity_T = maturity_T)
   mortgage_tree = find_bond_price(int_tree=int_treeM, maturity_T, coupon=current_coupon,par=0,tree=T)
   current_mortgage_value <- find_mortgage_price(mortgage_tree=mortgage_tree,coupon = current_coupon,principal_schedule=L_t,int_tree = int_treeM,tree = F)
   return(current_mortgage_value - target_mortgage_value)

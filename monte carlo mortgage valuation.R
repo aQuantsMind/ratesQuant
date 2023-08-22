@@ -72,7 +72,8 @@ simulate_mortgage <- function(rate_mbs, int_tree=int_treeM, n=100000,par=100000,
         }
       }
     }
-    values_mortgage[j]=value_mortgage}
+    values_mortgage[j]=value_mortgage
+  }
   values_mortgage_df <- as.data.frame(values_mortgage)
   mortgage_value_estimate <- mean(values_mortgage_df[,1])
   return(mortgage_value_estimate)
@@ -99,3 +100,13 @@ if (result$root == result$root) {
   print("Uniroot was not successful. Try adjusting the interval or using a different method.")
 }
 
+#re-evaluate mortgage value. in other words, show that the mortgage is issued at par if the mortgage rate amounts to the rate found above.
+rate_mbs <- result$root
+N=100000
+par=100000
+source("monte carlo_confidence interval.R")
+
+mortgage_value_point_estimate <- mean(mortgage_value_df[,1])
+std_error <- sd(mortgage_value_df[,1])/sqrt(N)
+print(paste("the point estimate for our mortgage value is",mortgage_value_point_estimate))
+print(paste("confidence interval ranges from",mortgage_value_point_estimate-2*std_error,"to",mortgage_value_point_estimate+2*std_error))

@@ -48,7 +48,7 @@ calibrate_rates_tree <- function(maturity_T,step_size=0.5,tree=F){
   
   for (Zi in 2:maturity_T) {
     #to keep deviations between our model and the observed term structure low, we choose a low target error. The choice is discretionary, but I believe 10^(-10) should do the trick
-    tgt_err = 10^(-2)
+    tgt_err = 10^(-5)
     error = 0.2
     #choose lower and upper bound for the drift term
     Theta_min = -.5
