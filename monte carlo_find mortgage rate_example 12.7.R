@@ -1,5 +1,4 @@
 maturity_T = 10
-#since R is indexed at 1
 nodes_N = maturity_T +1 
 
 result <- uniroot(diff_func_montecarlo, interval = c(0.001, 0.2))  # You can adjust the interval based on your problem domain

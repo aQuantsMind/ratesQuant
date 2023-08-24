@@ -1,16 +1,19 @@
+#PRE-REQ. "rates_model.R"; "find_mortgage_rate_Example 12.7.R"
+
 #BACKGROUND. We can build pricing models using our interest rate tree model (we built in "rates_model.R")
 #GOAL. we're interest in the optimal mortgage rate, which a bank charges to homeowners.
 #APPROACH. When setting the mortgage rate, we account not only for the current interest rate environment, but also take into account our view about how the short rate will evolve over time (subsumed by an interest rate tree)
 
 #to find coupon, given mortgage interest rate and other inputs
 #alternatively, use pmt() from the FinCal library 
+
 FindCoupon <- function(r_m,numb_payments_per_year=2,maturity_T=10,present_value=100000){
   Sum = 0
   Periods_N = numb_payments_per_year*maturity_T
   for (t in 1:Periods_N){
     add_to_Sum <- 1/((1+r_m/numb_payments_per_year)^(t))
     Sum <- Sum + add_to_Sum
-    }
+  }
   coupon = present_value / Sum
   return(coupon)
 }
@@ -44,8 +47,10 @@ find_bond_price <- function(int_tree, maturity_T, coupon=0, par=100, step_size =
 #to find mortgage price, start with the price of a mortgage without prepayment option (using "mortgage_tree" as an input)
 #Then, compute the value of the prepayment option through backward-induction
 #In each node t, compute the value of exercising your option by comparing the debt_t homebuyers owe (mortgage value in node t) with the outstanding principal
+#Because R is indexed at 1, we need to use (maturity) T + 1 nodes.
+#Specifically, see the definition of "disc_coupon". If we would define nodes_N = 10, we wouldn't be capturing the last coupon
 find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
-  american_tree <- matrix(nrow=nodes_N, ncol=nodes_N)
+  american_tree <- matrix(nrow=maturity_T, ncol=maturity_T)
   exercise_tree <- matrix(0, nrow = nodes_N, ncol = nodes_N)
   for (j in (maturity_T):1){
     for (i in j:1){
@@ -65,12 +70,12 @@ find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tre
       else{
         #by definition, wait and exercise value are 0 in the lats period. hence, option's value is 0
         american_tree[i,j] = 0
-        }
       }
     }
+  }
   if(tree){
-      return(exercise_tree)
-    }
+    return(exercise_tree)
+  }
   return(mortgage_tree[1,1] - american_tree[1,1])
 }
 
@@ -107,6 +112,7 @@ source("find_mortgage_rate_Example 12.7.R")
 
 target_mortgage_value = 100000
 maturity_T = 20
+nodes_N = maturity_T+1
 step_size=0.5
 
 diff_function <- function(r) {
@@ -125,6 +131,5 @@ if (result$root == result$root) {
 } else {
   print("Uniroot was not successful. Try adjusting the interval or using a different method.")
 }
-
 
 

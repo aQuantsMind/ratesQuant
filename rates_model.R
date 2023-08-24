@@ -1,5 +1,10 @@
+#PRE-REQ. "yieldcurve.R"
+
 #GOAL. Building a model forecasting the short-term rate (6-months rate)
 #MOTIVATION. The resulting interest rate tree can be used to price all sorts of rates derivatives
+
+
+#to easily source R scripts, change the following folder path to your local github repo
 setwd("/Users/dominik/R_quant/rates quant_MBS modelling/veronesi/ratesQuant")
 
 #function which returns a bond price (or, alternatively returns, the underlying price tree)

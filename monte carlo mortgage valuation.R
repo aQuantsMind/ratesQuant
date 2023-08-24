@@ -1,36 +1,5 @@
-#Because R is indexed at 1, we need to use (maturity) T + 1 nodes.
-#Specifically, see the definition of "disc_coupon". If we would define nodes_N = 10, we wouldn't be capturing the last coupon
-find_mortgage_price <- function(mortgage_tree,coupon,principal_schedule, int_tree, tree=F){
-  american_tree <- matrix(nrow=maturity_T, ncol=maturity_T)
-  exercise_tree <- matrix(0, nrow = nodes_N, ncol = nodes_N)
-  for (j in (maturity_T):1){
-    for (i in j:1){
-      if(j != (maturity_T)){
-        if(j!= 1){
-          wait = exp(-1*step_size*int_tree[i,j])*((.5*(american_tree[i,j+1]+american_tree[i+1,j+1])))
-          exercise = max(mortgage_tree[i,j] - principal_schedule[j],0)
-          american_tree[i,j] = max(wait,exercise)
-          if(exercise > wait){
-            exercise_tree[i,j]=1
-          }
-        }
-        else{
-          american_tree[i,j] = exp(-1*step_size*int_tree[i,j])*((0.5*(american_tree[i,j+1]+american_tree[i+1,j+1])))
-        }
-      }
-      else{
-        #by definition, wait and exercise value are 0 in the lats period. hence, option's value is 0
-        american_tree[i,j] = 0
-      }
-    }
-  }
-  if(tree){
-    return(exercise_tree)
-  }
-  return(mortgage_tree[1,1] - american_tree[1,1])
-}
-
-
+#PREQ-REQ.
+##PRE-REQ. "rates_model.R"; "find_mortgage_rate.R"; "find_mortgage_rate_Example 12.7.R"; "monte carlo_confidence interval.R"; "monte carlo_find mortgage rate example 12.7.R"
 simulate_mortgage <- function(rate_mbs, int_tree=int_treeM, n=100000,par=100000, step_size=0.5){
   path <- vector()
   coupon=par*(rate_mbs/2)/(1-1/(1+(rate_mbs/2))^(nodes_N-1))
