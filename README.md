@@ -1,6 +1,6 @@
 # ratesQuant
 
-This collection of RScripts shows how to use backward induction and monte carlo simuations to price mortgages and MBS.
+This collection of RScripts shows how to use backward induction and monte carlo simuations to price mortgages and MBS. It builds on Pietro Veronesi's "fixed income securities. valuation, risk, and risk management" from 2010. challenge: reverse-engineer example 12.7 and generalize the base case.
 
 Contents
 - "rates model.R" forecasts interest rates using the BDT model (which uses log interest rates) to construct an interest rates. We use the observed yield curve to construct our interest rate tree, thereby incorporating the market's current view of interest rates. We then define drift and diffusion terms to model our view of the future interest rate path
