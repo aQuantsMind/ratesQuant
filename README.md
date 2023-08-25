@@ -1,6 +1,6 @@
 # ratesQuant
 
-This collection of RScripts shows how to use backward induction and monte carlo simuations to price mortgages and MBS. It builds on (http://pietroveronesi.org/teaching/FIS/), which provides guidance for pricing all sorts of rates derivatives in discrete and continuous time. challenge: reverse-engineer example 12.7 and generalize the base case.
+This collection of RScripts shows how to use backward induction and monte carlo simuations to price mortgages and MBS. It builds on http://pietroveronesi.org/teaching/FIS/, which provides guidance for pricing all sorts of rates derivatives in discrete and continuous time. challenge: reverse-engineer example 12.7 and generalize the base case.
 
 Contents. 
 Note. "rates model.R", "find_mortgage_rate.R", and "monte carlo mortgage valuation.R" are the main scripts (when sourcing the scripts, one after another (in the order they're being mentioned), they'll load dependencies automatically)
