@@ -100,4 +100,5 @@ print(theta)
 int_treeM <- calibrate_rates_tree(maturity_T = 20,tree=T)
 View(int_treeM)
 
+source("simulate short rate in T.R")
 
